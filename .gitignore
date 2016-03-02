@@ -1,0 +1,51 @@
+Thumbs.db
+
+# User specific
+tags
+logs
+
+# SVN
+.svn
+.svnignore
+.metadata
+
+# Image files
+*.bmp
+*.png
+*.jpg
+
+# Individual image annotation files
+annotations_*.lst
+
+det_data/
+data/
+det_data/
+src/scratch/
+scratch/
+
+# Libraries and Object files
+libs
+obj
+*.so
+*.o
+*.o.d
+*.d
+*.pyc
+
+# generated files
+bin/
+gen/
+build/
+release/
+scratch/
+model/data_eval/
+appcompat*/
+
+#Eclipse .gitignore
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*.swo
