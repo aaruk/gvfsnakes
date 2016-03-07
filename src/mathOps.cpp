@@ -123,6 +123,7 @@ int interp2d(const cv::Mat& xs, const cv::Mat& ys, // Sample points
 int interp1d(const cv::Mat& x, const cv::Mat& fx, const cv::Mat& xq, cv::Mat& fq) {
   //Mat fq(xq.size(), xq.type());
   Mat mask(x.size(), CV_8U, Scalar(1));
+  cout << "x size " << x.size() << ", " << x.type() << endl;
   Mat diff_mat(x.size(), x.type());
   double min_val;
   Point nbr_00, nbr_01;
@@ -163,7 +164,6 @@ int calcDist(const cv::Mat& x, cv::Mat& dx) {
     return -1;
   }
 
-  dx.create(x.size(), x.type());
   const float* x_ptr = x.ptr<float>(0);
   float* dx_ptr = dx.ptr<float>(0);
 

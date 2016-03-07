@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
   waitKey(0);
 
   // Compute x, y components of gradients
-  Mat dem_img, smove, fx, fy, ux, uy;
+  Mat dem_img, dbg_img, smove, fx, fy, ux, uy;
   Sobel(edge_img, fx, CV_32F, 1, 0, 3); // Compute gradient of blurred edge map
   Sobel(edge_img, fy, CV_32F, 0, 1, 3); // x, y components separately
   snake::normalizeMat(fx, fy);
@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
   float mu = 0.08;
   int diffusion_iter = 40;
   cvtColor(im, dem_img, CV_GRAY2RGB);
+  cvtColor(im, dbg_img, CV_GRAY2RGB);
   dem_img.copyTo(smove);
   snake::gradVectorField(fx, fy, ux, uy, mu, diffusion_iter);
   Scalar color(0, 255, 0);
@@ -74,11 +75,12 @@ int main(int argc, char* argv[]) {
     y_ptr[i] = snake_coords[0][i].y;
   }
 
+  cout << "Starting " << endl;
   // Find shape by moving snake on image
   namedWindow("Snake on Image", 0);
   for (size_t i=0; i<10; i++) {
     snake::deformSnake(x, y, ux, uy, 2.1, 0.8, 0.5, 0.9, 6);
-    snake::interpolateSnake(1, 2, x, y);
+    snake::interpolateSnake(1, 2, x, y, dbg_img);
     for (size_t j=0; j<x.cols; j++) {
       smove.at<Vec3b>(floor(y.at<float>(0, j)), floor(x.at<float>(0, j))) = 255;
     }

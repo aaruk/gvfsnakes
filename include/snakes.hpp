@@ -24,7 +24,7 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
 
 int interploate1d();
 int interpolate2d();
-int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, cv::Mat& y);
+int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, cv::Mat& y, cv::Mat& img);
 //int getInterpIndex(const cv::Mat& inp_indicator, cv::Mat& q_pts);
 cv::Mat getInterpIndex(const cv::Mat& inp_indicator);
 void gradVectorField(cv::Mat& fx, cv::Mat& fy, cv::Mat& u, cv::Mat& v,

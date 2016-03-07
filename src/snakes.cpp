@@ -82,8 +82,10 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
 }
 
 
-int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y) {
+int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat& img) {
   Mat dx, dy, d; int j;
+  dx.create(x.size(), CV_32F);
+  dy.create(y.size(), CV_32F);
   calcDist(x, dx); 
   calcDist(y, dy); 
   d = dx+dy;
@@ -113,6 +115,14 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y) {
     }
   }
 
+  cout << "Image data" << img.size() << endl;
+  for (size_t j=0; j<x.cols; j++) {
+    img.at<Vec3b>(floor(y.at<float>(0, j)), floor(x.at<float>(0, j))) = 255;
+  }
+  namedWindow("Pts", 0);
+  imshow("Pts", img);
+  waitKey();
+
   // Create a new matrix and copy only valid points from original array
   Mat x_new (1, valid_pt_count, CV_32F);
   Mat y_new (1, valid_pt_count, CV_32F);
@@ -138,6 +148,9 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y) {
   //cout << dy.cols << endl;
   //cout << x_new.cols << endl;
   //cout << y_new.cols << endl;
+ // cout << "Size: " << x_new.size() << ", " << y_new.size() << endl;
+  dx.create(x_new.size(), CV_32F);
+  dy.create(y_new.size(), CV_32F);
   calcDist(x_new, dx);
   calcDist(y_new, dy);
   d = dx + dy;
@@ -146,7 +159,7 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y) {
   Mat xq_new, yq_new;
 
   while (max_d > dmax) {
-    dmax_indicator.create(x.size(), CV_32S);
+    dmax_indicator.create(x_new.size(), CV_32S);
     int* dmax_ptr = dmax_indicator.ptr<int>(0);
     loop_term = dmax_indicator.cols;
     ind_var.create(x_new.size(), x_new.type());
@@ -177,11 +190,22 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y) {
     x_new.release(); y_new.release();
     x_new = xq_new; y_new = yq_new;
 
+    // Debugging code begin
+    for (size_t j=0; j<x.cols; j++) {
+      img.at<Vec3b>(floor(y_new.at<float>(0, j)), floor(x_new.at<float>(0, j))) = 255;
+    }
+    namedWindow("After point removal", 0);
+    imshow("Pts", img);
+    waitKey();
+    // Debugging code end
+
     if (x_new.cols < 10) {
       cout << "Error! Contour too small!" << endl;
       break;
     }
 
+    dx.create(x_new.size(), CV_32F);
+    dy.create(y_new.size(), CV_32F);
     calcDist(x_new, dx);
     calcDist(y_new, dy);
     d = dx + dy;
