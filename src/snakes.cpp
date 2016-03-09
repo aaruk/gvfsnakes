@@ -26,6 +26,7 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
 
   int last_elem = snake_len - 1; 
   float* pd_ptr;
+
   // Populate elements of the NxN penta-diagonal matrix
   // Where N, is the length of snake
   for (size_t i = 0; i < snake_len; i++) {
@@ -86,9 +87,13 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
   Mat dx, dy, d; int j;
   dx.create(x.size(), CV_32F);
   dy.create(y.size(), CV_32F);
+  d.create(y.size(), CV_32F);
   calcDist(x, dx); 
   calcDist(y, dy); 
-  d = dx+dy;
+  //d = dx+dy;
+  add(dx, dy, d);
+  dx.release();
+  dy.release();
 
   //-- Find and eliminate points located closer than dmin
   Mat x_dmin(x.size(), x.type());
@@ -126,29 +131,23 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
   // Create a new matrix and copy only valid points from original array
   Mat x_new (1, valid_pt_count, CV_32F);
   Mat y_new (1, valid_pt_count, CV_32F);
+
   float* x_new_ptr = x_new.ptr<float>(0);
   float* y_new_ptr = y_new.ptr<float>(0);
+  int c = 0;
 
   for (size_t i=0; i<loop_term; i++) {
     if (x_dmin_ptr[i] == -1) {
       continue;
     } else {
-      x_new_ptr[i] = x_ptr[i];
-      y_new_ptr[i] = y_ptr[i];
+      x_new_ptr[c] = x_ptr[i];
+      y_new_ptr[c++] = y_ptr[i];
     }
   }
 
   // Find points that are too far away [d > dmax]
-  Mat dmax_indicator, ind_var, q_pts;
   double max_d;
-
-  float* ind_var_ptr;
-  cout << "Check " <<  endl;
-  //cout << dx.cols << endl;
-  //cout << dy.cols << endl;
-  //cout << x_new.cols << endl;
-  //cout << y_new.cols << endl;
- // cout << "Size: " << x_new.size() << ", " << y_new.size() << endl;
+  Mat dmax_indicator, ind_var, q_pts;
   dx.create(x_new.size(), CV_32F);
   dy.create(y_new.size(), CV_32F);
   calcDist(x_new, dx);
@@ -157,7 +156,10 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
   d_ptr = d.ptr<float>(0);
   minMaxLoc(d, 0, &max_d, 0, 0);
   Mat xq_new, yq_new;
+  float* ind_var_ptr;
 
+  // Check and interpolate until all 'gaps' in curve are filled
+  //namedWindow("Pts", 0);
   while (max_d > dmax) {
     dmax_indicator.create(x_new.size(), CV_32S);
     int* dmax_ptr = dmax_indicator.ptr<int>(0);
@@ -175,28 +177,28 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
     ind_var.create(x_new.size(), x_new.type());
     ind_var_ptr = ind_var.ptr<float>(0);
 
-    cout << "before " << endl;
     size_t ind_var_siz = xq_new.cols;
     for (size_t i=0; i<loop_term; i++) {
       ind_var_ptr[i] = float(i);
     }
 
     q_pts = getInterpIndex(dmax_indicator);
-    cout << "after" << endl;
-    xq_new.create(q_pts.size(), x_new.type());
-    yq_new.create(q_pts.size(), x_new.type());
+
+    xq_new.create(q_pts.size(), CV_32F);
+    yq_new.create(q_pts.size(), CV_32F);
     interp1d(ind_var, x_new, q_pts, xq_new);
     interp1d(ind_var, y_new, q_pts, yq_new);
-    x_new.release(); y_new.release();
     x_new = xq_new; y_new = yq_new;
 
+    //x_new = interp1d(ind_var, x_new, q_pts);
+    //y_new = interp1d(ind_var, y_new, q_pts);
+
     // Debugging code begin
-    for (size_t j=0; j<x.cols; j++) {
+    for (size_t j=0; j<x_new.cols; j++) {
       img.at<Vec3b>(floor(y_new.at<float>(0, j)), floor(x_new.at<float>(0, j))) = 255;
     }
-    namedWindow("After point removal", 0);
-    imshow("Pts", img);
-    waitKey();
+    //imshow("Pts", img);
+    //waitKey();
     // Debugging code end
 
     if (x_new.cols < 10) {

@@ -11,7 +11,7 @@ int edge_threshold = 0;
 void applyEdgeThresh(int, void*) {
   
   Canny(im, edge_img, 0, edge_threshold, 3);
-  imshow("Edge Image", edge_img);
+  //imshow("Edge Image", edge_img);
 }
 
 int main(int argc, char* argv[]) {
@@ -27,15 +27,15 @@ int main(int argc, char* argv[]) {
 
   // Find Edges
   //dispImage(im, "Input Image");
-  namedWindow("Input Image", 0);
-  imshow("Input Image", im);
-  waitKey(0);
-  namedWindow("Edge Image", 0);
+  //namedWindow("Input Image", 0);
+  //imshow("Input Image", im);
+  //waitKey(0);
+  //namedWindow("Edge Image", 0);
   //createTrackbar("Canny Threshold",
   //               "Edge Image",
   //               &edge_threshold, 255, applyEdgeThresh);
   Canny(im, edge_img, 0, 80, 3);
-  imshow("Edge Image", edge_img);
+  //imshow("Edge Image", edge_img);
   waitKey(0);
 
   // Compute x, y components of gradients
@@ -53,8 +53,8 @@ int main(int argc, char* argv[]) {
   snake::gradVectorField(fx, fy, ux, uy, mu, diffusion_iter);
   Scalar color(0, 255, 0);
   drawOptFlowMap(ux, uy, dem_img, 8, 8, color);
-  namedWindow("Grad Field", 0);
-  dispImage(dem_img, "Grad Field");
+  //namedWindow("Grad Field", 0);
+  //dispImage(dem_img, "Grad Field");
 
   // Initialize Snakes
   Mat contour_img = Mat::zeros(im.rows, im.cols, CV_8U); 
@@ -78,8 +78,8 @@ int main(int argc, char* argv[]) {
   cout << "Starting " << endl;
   // Find shape by moving snake on image
   namedWindow("Snake on Image", 0);
-  for (size_t i=0; i<10; i++) {
-    snake::deformSnake(x, y, ux, uy, 2.1, 0.8, 0.5, 0.9, 6);
+  for (size_t i=0; i<20; i++) {
+    snake::deformSnake(x, y, uy, ux, 2.1, 0.8, 0.5, 0.9, 6);
     snake::interpolateSnake(1, 2, x, y, dbg_img);
     for (size_t j=0; j<x.cols; j++) {
       smove.at<Vec3b>(floor(y.at<float>(0, j)), floor(x.at<float>(0, j))) = 255;

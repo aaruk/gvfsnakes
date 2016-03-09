@@ -3,6 +3,7 @@ Thumbs.db
 # User specific
 tags
 logs
+*.log
 
 # SVN
 .svn

@@ -123,7 +123,6 @@ int interp2d(const cv::Mat& xs, const cv::Mat& ys, // Sample points
 int interp1d(const cv::Mat& x, const cv::Mat& fx, const cv::Mat& xq, cv::Mat& fq) {
   //Mat fq(xq.size(), xq.type());
   Mat mask(x.size(), CV_8U, Scalar(1));
-  cout << "x size " << x.size() << ", " << x.type() << endl;
   Mat diff_mat(x.size(), x.type());
   double min_val;
   Point nbr_00, nbr_01;
@@ -139,7 +138,7 @@ int interp1d(const cv::Mat& x, const cv::Mat& fx, const cv::Mat& xq, cv::Mat& fq
     minMaxLoc(diff_mat, &min_val, 0, &nbr_00, 0, mask);
     mask.at<uchar>(nbr_00.y, nbr_00.x) = (uchar)0;
     minMaxLoc(diff_mat, &min_val, 0, &nbr_01, 0, mask);
-    mask.at<uchar>(nbr_00.y, nbr_00.x) = (uchar)0;
+    mask.at<uchar>(nbr_00.y, nbr_00.x) = (uchar)1;
 
     float thresh = 0.1; // Set heuristically - play around for better results
     if (x.at<float>(nbr_01.y, nbr_01.x) - x.at<float>(nbr_00.y, nbr_00.x) < thresh) {
@@ -168,12 +167,62 @@ int calcDist(const cv::Mat& x, cv::Mat& dx) {
   float* dx_ptr = dx.ptr<float>(0);
 
   size_t x_len = x.cols;
-  for (size_t i=1; i<x.cols; i++) {
-    dx_ptr[i] = abs(x_ptr[i] - x_ptr[i-1]);
+  for (size_t i=0; i<x_len; i++) {
+    dx_ptr[i] = abs(x_ptr[i] - x_ptr[i+1]);
   }
 
   // for closed contour, use first and last point to compute dx[0]
-  dx_ptr[0] = x_ptr[0] - x_ptr[x_len-1];
+  dx_ptr[x_len-1] = abs(x_ptr[0] - x_ptr[x_len-1]);
   return 0;
 }
 
+
+//--Function to return values of a 1D function at specific query points based on sample function values--//
+//--using Linear Interpolation//
+Mat interp1d(Mat x, Mat fx, Mat xq) { 
+
+//--x: Independent Variable; f(x): Dependent Variable;
+//--xq: Query points; fq(xq) is calculated using this function--//
+	Mat fq(xq.size(), xq.type());
+	
+	Mat Mask(x.size(), CV_8U, Scalar(1));			//Mask image used in finding second minimum point
+	double min_val;
+	Point min_pt1, min_pt2;
+	Mat diff_mat(x.size(), x.type());				//Matrix to hold distance between xq and x values
+    
+	int col_count = xq.cols;	//Length of vector containing query points
+	float* xq_ptr, *fq_ptr;
+	xq_ptr = xq.ptr<float>(0);
+	fq_ptr = fq.ptr<float>(0);
+	
+	for(int i = 0; i <  col_count; i++) {
+
+		Mat ones_vector = Mat::ones(x.size(), x.type()); //Temporary vector used during distance value computation
+		diff_mat = abs(xq_ptr[i] - x); //Calcualte distance between query point and all x's
+		//multiply(ones_vector, xq_ptr[i], ones_vector);
+		//absdiff(ones_vector,  x, diff_mat);
+				
+		//Find the two closest neighbours to xq and interpolate (or extrapolate)
+		minMaxLoc(diff_mat, &min_val, 0, &min_pt1, 0, Mask);
+		Mask.at<uchar>(min_pt1.y, min_pt1.x) = (uchar)0;
+		minMaxLoc(diff_mat, &min_val, 0, &min_pt2, 0, Mask);
+		Mask.at<uchar>(min_pt1.y, min_pt1.x) = (uchar)1;
+		
+		if((x.at<float>(min_pt2.y, min_pt2.x) - x.at<float>(min_pt1.y, min_pt1.x)) < 0.1) {
+			
+			if(min_pt1.x == (x.cols - 1))
+				fq_ptr[i] = fx.at<float>(0, 0);
+			else 
+				fq_ptr[i] = fx.at<float>(min_pt1.y, min_pt1.x);
+			
+		}else 
+			fq_ptr[i] = (fx.at<float>(min_pt2.y, min_pt2.x) - fx.at<float>(min_pt1.y, min_pt1.x))
+								* (xq_ptr[i] - x.at<float>(min_pt1.y, min_pt1.x)) / (x.at<float>(min_pt2.y, min_pt2.x) - x.at<float>(min_pt1.y, min_pt1.x))
+								+ fx.at<float>(min_pt1.y, min_pt1.x);	
+
+		//cout << "Interpolated x: " << fq.at<float>(i, 0) << ", ";
+
+	}
+		
+	return fq;
+}
