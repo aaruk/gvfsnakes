@@ -141,9 +141,20 @@ int interp1d(const cv::Mat& x, const cv::Mat& fx, const cv::Mat& xq, cv::Mat& fq
     mask.at<uchar>(nbr_00.y, nbr_00.x) = (uchar)1;
 
     float thresh = 0.1; // Set heuristically - play around for better results
-    if (x.at<float>(nbr_01.y, nbr_01.x) - x.at<float>(nbr_00.y, nbr_00.x) < thresh) {
-      // If 2 neighbors are too close, take function value from one of the existing pts
-      fq_ptr[i] = fx.at<float>(nbr_00.y, nbr_00.x); 
+    if (abs(x.at<float>(nbr_01.y, nbr_01.x) - x.at<float>(nbr_00.y, nbr_00.x)) < thresh) {
+      //if ((nbr_01.x == (x.cols - 1) || (nbr_00.x == (x.cols - 1`))) {
+       //fq_ptr[i] = fx.at<float>(0, 0)r;
+      //} else {
+        // If 2 neighbors are too close, take function value from one of the existing pts
+        fq_ptr[i] = fx.at<float>(nbr_00.y, nbr_00.x); 
+      //}
+
+      //if (i == arr_len -1) {
+      //cout << "Inside If" << endl;
+      //cout << x.at<float>(nbr_01.y, nbr_01.x) << endl;
+      //cout << x.at<float>(nbr_00.y, nbr_00.x) << endl;
+      //cout << fq_ptr[i] << endl;
+       //}
     } else {
       // If not apply 1D interpolation function
       fq_ptr[i] = (fx.at<float>(nbr_01.y, nbr_01.x) - fx.at<float>(nbr_00.y, nbr_00.x))

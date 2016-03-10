@@ -45,14 +45,14 @@ int main(int argc, char* argv[]) {
   snake::normalizeMat(fx, fy);
 
   // Diffuse gradients across images
-  float mu = 0.08;
-  int diffusion_iter = 40;
+  float mu = 0.1;
+  int diffusion_iter = 100;
   cvtColor(im, dem_img, CV_GRAY2RGB);
   cvtColor(im, dbg_img, CV_GRAY2RGB);
   dem_img.copyTo(smove);
   snake::gradVectorField(fx, fy, ux, uy, mu, diffusion_iter);
   Scalar color(0, 255, 0);
-  drawOptFlowMap(ux, uy, dem_img, 8, 8, color);
+  drawOptFlowMap(uy, ux, dem_img, 8, 8, color);
   //namedWindow("Grad Field", 0);
   //dispImage(dem_img, "Grad Field");
 
@@ -78,14 +78,18 @@ int main(int argc, char* argv[]) {
   cout << "Starting " << endl;
   // Find shape by moving snake on image
   namedWindow("Snake on Image", 0);
-  for (size_t i=0; i<20; i++) {
-    snake::deformSnake(x, y, uy, ux, 2.1, 0.8, 0.5, 0.9, 6);
+  for (size_t i=0; i<80; i++) {
+    snake::deformSnake(y, x, uy, ux, 2.1, 0.8, 0.5, 0.9, 6);
     snake::interpolateSnake(1, 2, x, y, dbg_img);
     for (size_t j=0; j<x.cols; j++) {
       smove.at<Vec3b>(floor(y.at<float>(0, j)), floor(x.at<float>(0, j))) = 255;
     }
-    dispImage(smove, "Snake on Image");
+    dispImage(smove, "Snake on Image", 50);
   }
-  
+
+  for (size_t j=0; j<x.cols; j++) {
+    dem_img.at<Vec3b>(floor(y.at<float>(0, j)), floor(x.at<float>(0, j))) = 255;
+  }
+  imwrite("./results/ph_snake.jpg", dem_img);
   return 0;
 }

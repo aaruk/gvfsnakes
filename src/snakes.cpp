@@ -15,7 +15,7 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
                 const float& kappa,
                 const int& iter) {
 
-  int snake_len = x.cols;
+  size_t snake_len = x.cols;
 
   float a = gamma * (2 * alpha + 6 * beta) + 1;
   float b = gamma * (- alpha - 4 * beta);
@@ -24,7 +24,7 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
   Mat ldiag(snake_len, 1, CV_32F, Scalar(a));
   Mat pd_mat = Mat::diag(ldiag);
 
-  int last_elem = snake_len - 1; 
+  size_t last_elem = snake_len - 1; 
   float* pd_ptr;
 
   // Populate elements of the NxN penta-diagonal matrix
@@ -107,7 +107,6 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
   size_t loop_term = x.cols;
   int valid_pt_count = 0;
 
-  cout << "Snake Cols " << x.cols << endl;
   // Go through dist vector and flag points that are too close
   for (size_t i=0; i<loop_term; i++) {
     if (d_ptr[i] < dmin) {
@@ -124,9 +123,9 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
   for (size_t j=0; j<x.cols; j++) {
     img.at<Vec3b>(floor(y.at<float>(0, j)), floor(x.at<float>(0, j))) = 255;
   }
-  namedWindow("Pts", 0);
-  imshow("Pts", img);
-  waitKey();
+  //namedWindow("Pts", 0);
+  //imshow("Pts", img);
+  //waitKey();
 
   // Create a new matrix and copy only valid points from original array
   Mat x_new (1, valid_pt_count, CV_32F);
@@ -157,10 +156,13 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
   minMaxLoc(d, 0, &max_d, 0, 0);
   Mat xq_new, yq_new;
   float* ind_var_ptr;
+  int max_iter = 100;
+  int iter_cnt = 0;
 
   // Check and interpolate until all 'gaps' in curve are filled
   //namedWindow("Pts", 0);
   while (max_d > dmax) {
+    cout << "Max Val " << max_d << "/" << dmax << endl;
     dmax_indicator.create(x_new.size(), CV_32S);
     int* dmax_ptr = dmax_indicator.ptr<int>(0);
     loop_term = dmax_indicator.cols;
@@ -190,17 +192,7 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
     interp1d(ind_var, y_new, q_pts, yq_new);
     x_new = xq_new; y_new = yq_new;
 
-    //x_new = interp1d(ind_var, x_new, q_pts);
-    //y_new = interp1d(ind_var, y_new, q_pts);
-
     // Debugging code begin
-    for (size_t j=0; j<x_new.cols; j++) {
-      img.at<Vec3b>(floor(y_new.at<float>(0, j)), floor(x_new.at<float>(0, j))) = 255;
-    }
-    //imshow("Pts", img);
-    //waitKey();
-    // Debugging code end
-
     if (x_new.cols < 10) {
       cout << "Error! Contour too small!" << endl;
       break;
@@ -213,9 +205,17 @@ int interpolateSnake(const float dmin, const float dmax, cv::Mat& x, Mat& y, Mat
     d = dx + dy;
     d_ptr = d.ptr<float>(0);
     minMaxLoc(d, 0, &max_d, 0, 0);
+
+    // Exit loop if max iter is reached
+    iter_cnt++;
+    if (iter_cnt > max_iter) {
+      cout << "Max iter reached " << endl;
+      break;
+    }
   }
   x = x_new;
   y = y_new;
+  cout << "Snake Interpolation Done! " << endl;
   return 0;
 }
 
@@ -267,34 +267,27 @@ Mat getInterpIndex(const Mat &IDX) {
 	Mat y(1, y_col_count, CV_32F);
 
 	//Create indexes inbetween all points (this will be the index of x/y coordinates)
-	for(int i = 0; i < y_col_count; i++) {
+	for (int i = 0; i < y_col_count; i++) {
 		y.at<float>(0, i) = 0.5 * i;
 	}
 
 	//Create new array to hold index points temporarily
-	float y_new[2000];
+	float y_new[3000];
 	int count = 0;
 
-	for(int i = 0; i < IDX.cols; i++) { //Iterate over the IDX array and keep new points 
-										//(Eg: point 1.5 is retained if d(1, 2) > dmax)
-										//where distance between 2 points is greater than dmax
-		
+	for (int i = 0; i < IDX.cols; i++) { // Iterate over the IDX array and keep new points 
+	 									 // (Eg: point 1.5 is retained if d(1, 2) > dmax)
+										 // where distance between 2 points is greater than dmax
 		y_new[count++] = y.at<float>(0, 2*i + 0);
-		
-		if(IDX.at<int>(0, i) == 1)		//odd locations in y hold decimal values, even locations the whole numbers
-		{
+		if (IDX.at<int>(0, i) == 1)	{ //odd locations in y hold decimal values, even locations the whole numbers
 			y_new[count++] = y.at<float>(0, 2*i + 1); 
 		}
 	}
 
 	Mat y1(1, count, CV_32F); //Create new matrix and copy values(indices) from array to matrix
-
 	for(int i = 0; i < count; i++) {
-
 		y1.at<float>(0, i) = y_new[i];
-		//cout << "New indices: " << y1.at<float>(i, 0) << ", ";
 	}
-	
 	return y1;
 }
 
