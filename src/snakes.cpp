@@ -17,9 +17,9 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
 
   size_t snake_len = x.cols;
 
-  float a = gamma * (2 * alpha + 6 * beta) + 1;
-  float b = gamma * (- alpha - 4 * beta);
-  float c = beta * gamma;
+  float a = gamma * (2*alpha + 6*beta) + 1;
+  float b = gamma * (-alpha - 4*beta);
+  float c = beta  * gamma;
 
   Mat ldiag(snake_len, 1, CV_32F, Scalar(a));
   Mat pd_mat = Mat::diag(ldiag);
@@ -29,7 +29,7 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
 
   // Populate elements of the NxN penta-diagonal matrix
   // Where N, is the length of snake
-  for (size_t i = 0; i < snake_len; i++) {
+  for (size_t i=0; i<snake_len; i++) {
      pd_ptr = pd_mat.ptr<float>(i);
      if (i == 0) {
        pd_ptr[i+1] = b;
@@ -59,7 +59,6 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
      }
   }
 
-  cout << "After Penta Diag " << endl;
   // Compute matrix inverse: (I-gamma*pd_mat)^(-1)
   Mat i_gamma_pd_inv = pd_mat.inv();
   Mat fxq, fyq;
@@ -67,18 +66,17 @@ int deformSnake(cv::Mat& x, cv::Mat& y,
   // Deform snake for the specified no of iterations
   // Update snake coordinates based on value of external constraint function
   // at each coordinate of x and y
-  for (size_t i = 0; i < iter; i++) {
+  for (size_t i=0; i<iter; i++) {
 
     // Get x and y components of external constraint force
     // at snake location
-    interp2d(y, x, ext_fx, fxq);
-    interp2d(y, x, ext_fy, fyq);
+    interp2d(x, y, ext_fx, fxq);
+    interp2d(x, y, ext_fy, fyq);
 
     x = (x + kappa*gamma + fxq) * i_gamma_pd_inv;
     y = (y + kappa*gamma + fyq) * i_gamma_pd_inv;
   }
 
- cout << "Snake Deformed " << endl;
  return 0;
 }
 

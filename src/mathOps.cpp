@@ -3,13 +3,14 @@
 using namespace std;
 using namespace cv;
 
-int interp2d(const cv::Mat& xs, const cv::Mat& ys, // Sample points
-             const cv::Mat& fs, cv::Mat& fq) {     // Function values: in&out
+int interp2d(const cv::Mat& xs,    // grid locations - x coords
+             const cv::Mat& ys,    // grid locations - y coords
+             const cv::Mat& fs,    // function values at grid locations
+                   cv::Mat& fq) {  // function query points
   int xs_len = xs.cols;
   fq.create(xs.size(), xs.type());
 
   // Get grid coordinates surrounding snake location
-
   /*------------*
     |  |  |  |  |
     *--*--*--*--*
@@ -17,7 +18,7 @@ int interp2d(const cv::Mat& xs, const cv::Mat& ys, // Sample points
     *--*--*--*--*
     |  |  |  |  |
     *--*--*--*--*
-   */
+    */
   Mat x1(xs.size(), xs.type());
   Mat x2(xs.size(), xs.type());
   Mat y1(ys.size(), ys.type());

@@ -4,6 +4,7 @@ Thumbs.db
 tags
 logs
 *.log
+legacy
 
 # SVN
 .svn
@@ -41,6 +42,7 @@ release/
 scratch/
 model/data_eval/
 appcompat*/
+results/
 
 #Eclipse .gitignore
 bin/**
